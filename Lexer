@@ -1,0 +1,111 @@
+import java.lang.System;
+import java.io.*;
+
+class Lexer {
+
+	Yylex tokenizer;
+	public  Lexer(String fileName) 
+	{
+	  try
+	  {
+	  tokenizer=new Yylex(new BufferedReader(new FileReader(fileName)));
+	  }
+	  catch(Exception e)
+	  {
+	  
+	  }	 
+	}
+	public Token nextToken()
+	{
+		Token next=null;
+		try
+		{
+		 next=  tokenizer.getToken();
+		}
+		catch(Exception e)
+		{
+		}
+		return next;
+	}
+	}
+
+
+%%
+
+
+%function getToken
+%type Token
+%char
+%line
+
+%state IDENSTATE, CONSTSTATE, CONSTSTATE2, CONSTSTATE3, FUNCSTATE, FUNCSTATE2
+
+%{
+	//initialize  variables to be used by class
+	int paranCount = 0;
+
+%}
+
+
+%init{
+
+//Add code to be executed on initialization of the lexer
+
+%init}
+
+PACKAGE=({s}*package{s})
+s=(" ")
+n=("\n")
+t=("\t")
+r=("\r")
+EQUAL=({s}*"="{s}*)
+DOT=(\.)
+CONST=({s}*const{s})
+IMPORT=({s}*import{s})
+STRING_LIT=({s}*\"[a-zA-Z]+[0-9a-zA-Z]*\"{s}*)
+INT_LIT=({s}*[0-9]+{s}*)
+VAR=({s}*var{s}*)
+FUNC=({s}*func{s})
+OPEN_PARAN=({s}*\({s}*)
+CLOSE_PARAN=({s}*\){s}*)
+OPEN_CURLY=({s}*\{{s}*)
+CLOSE_CURLY=({s}*\}{s}*)
+IDENTIFIER=({s}*[a-zA-Z]+[0-9a-zA-Z]*{s}*)
+SLASH=({s}*\/{s}*)
+
+
+
+%% 
+<YYINITIAL> {PACKAGE} { yybegin(IDENSTATE); return (new Token(Token.PACKAGE,yytext().replace(" ","")));}
+<YYINITIAL> {IMPORT} { yybegin(IDENSTATE); return (new Token(Token.IMPORT,yytext().replace(" ","")));}
+<YYINITIAL> {CONST} { yybegin(CONSTSTATE); return (new Token(Token.CONST,yytext().replace(" ","")));}
+<YYINITIAL> {FUNC} {return (new Token(Token.FUNC,yytext().replace(" ","")));}
+<YYINITIAL> {OPEN_PARAN} {return (new Token(Token.OPEN_PARAN,yytext().replace(" ","")));}
+<YYINITIAL> {CLOSE_PARAN} {return (new Token(Token.CLOSE_PARAN,yytext().replace(" ","")));}
+<YYINITIAL> {CLOSE_CURLY} {return (new Token(Token.CLOSE_CURLY,yytext().replace(" ","")));}
+<YYINITIAL> {OPEN_CURLY} {return (new Token(Token.OPEN_CURLY,yytext().replace(" ","")));}
+<YYINITIAL> {IDENTIFIER} {return (new Token(Token.IDENTIFIER,yytext().replace(" ","")));}
+<YYINITIAL> {DOT} {return (new Token(Token.DOT,yytext().replace(" ","")));}
+<YYINITIAL> {VAR} {return (new Token(Token.VAR,yytext().replace(" ","")));}
+<YYINITIAL> {EQUAL} {return (new Token(Token.EQUAL,yytext().replace(" ","")));}
+<YYINITIAL> {INT_LIT} {return (new Token(Token.INT_LIT,yytext().replace(" ","")));}
+<YYINITIAL> {STRING_LIT} {return (new Token(Token.STRING_LIT,yytext().replace(" ","")));}
+<YYINITIAL> {SLASH} {return (new Token(Token.SLASH,yytext().replace(" ","")));}
+
+
+<CONSTSTATE> {IDENTIFIER} {yybegin(CONSTSTATE2); return (new Token(Token.IDENTIFIER,yytext().replace(" ","")));}
+<CONSTSTATE2> {IDENTIFIER} {return (new Token(Token.IDENTIFIER,yytext().replace(" ","")));}
+<CONSTSTATE2> {EQUAL} {yybegin(CONSTSTATE3);return (new Token(Token.EQUAL,yytext().replace(" ","")));}
+<CONSTSTATE3> {STRING_LIT} {yybegin(YYINITIAL);return (new Token(Token.STRING_LIT,yytext().replace(" ","")));}
+<CONSTSTATE3> {INT_LIT} {yybegin(YYINITIAL);return (new Token(Token.INT_LIT,yytext().replace(" ","")));}
+
+<IDENSTATE> {IDENTIFIER} { yybegin(YYINITIAL);return (new Token(Token.IDENTIFIER,yytext().replace(" ","")));}
+<IDENSTATE> {STRING_LIT} { yybegin(YYINITIAL); return (new Token(Token.STRING_LIT,yytext().replace(" ","")));}
+
+
+
+<YYINITIAL> . {return new Token(Token.ERROR, "Invalid input: " + yytext());}
+<YYINITIAL> [\n] {}
+<YYINITIAL> [\t] {}
+
+
