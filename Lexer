@@ -43,6 +43,7 @@ class Lexer {
 %{
 	//initialize  variables to be used by class
 	int paranCount = 0;
+	int curlyCount = 0;
 
 %}
 
@@ -52,6 +53,11 @@ class Lexer {
 //Add code to be executed on initialization of the lexer
 
 %init}
+%eof{ 
+if(curlyCount != 0 || paranCount != 0){
+	System.out.println("Something wrong with brackets");
+}
+%eof} 
 
 PACKAGE=({s}*package{s})
 s=(" ")
@@ -80,10 +86,10 @@ SLASH=({s}*\/{s}*)
 <YYINITIAL> {IMPORT} { yybegin(IDENSTATE); return (new Token(Token.IMPORT,yytext().replace(" ","")));}
 <YYINITIAL> {CONST} { yybegin(CONSTSTATE); return (new Token(Token.CONST,yytext().replace(" ","")));}
 <YYINITIAL> {FUNC} {return (new Token(Token.FUNC,yytext().replace(" ","")));}
-<YYINITIAL> {OPEN_PARAN} {return (new Token(Token.OPEN_PARAN,yytext().replace(" ","")));}
-<YYINITIAL> {CLOSE_PARAN} {return (new Token(Token.CLOSE_PARAN,yytext().replace(" ","")));}
-<YYINITIAL> {CLOSE_CURLY} {return (new Token(Token.CLOSE_CURLY,yytext().replace(" ","")));}
-<YYINITIAL> {OPEN_CURLY} {return (new Token(Token.OPEN_CURLY,yytext().replace(" ","")));}
+<YYINITIAL> {OPEN_PARAN} {paranCount++;return (new Token(Token.OPEN_PARAN,yytext().replace(" ","")));}
+<YYINITIAL> {CLOSE_PARAN} {paranCount--;if(paranCount < 0){return new Token(Token.ERROR,"Something wrong with brackets");}return (new Token(Token.CLOSE_PARAN,yytext().replace(" ","")));}
+<YYINITIAL> {CLOSE_CURLY} {curlyCount--;if(curlyCount < 0){return new Token(Token.ERROR,"Something wrong with brackets");}return (new Token(Token.CLOSE_CURLY,yytext().replace(" ","")));}
+<YYINITIAL> {OPEN_CURLY} {curlyCount++;return (new Token(Token.OPEN_CURLY,yytext().replace(" ","")));}
 <YYINITIAL> {IDENTIFIER} {return (new Token(Token.IDENTIFIER,yytext().replace(" ","")));}
 <YYINITIAL> {DOT} {return (new Token(Token.DOT,yytext().replace(" ","")));}
 <YYINITIAL> {VAR} {return (new Token(Token.VAR,yytext().replace(" ","")));}
@@ -107,5 +113,7 @@ SLASH=({s}*\/{s}*)
 <YYINITIAL> . {return new Token(Token.ERROR, "Invalid input: " + yytext());}
 <YYINITIAL> [\n] {}
 <YYINITIAL> [\t] {}
+<YYINITIAL> [\r] {}
+
 
 
