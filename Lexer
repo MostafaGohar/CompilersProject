@@ -59,54 +59,55 @@ if(curlyCount != 0 || paranCount != 0){
 }
 %eof} 
 
-PACKAGE=({s}*package{s})
+PACKAGE=({a}*package{a}+)
 s=(" ")
-n=("\n")
-t=("\t")
-r=("\r")
-EQUAL=({s}*"="{s}*)
+n=(\n)
+t=(\t)
+r=(\r)
+a=([ /&nbsp;\t])
+EQUAL=({a}*"="{a}*)
 DOT=(\.)
-CONST=({s}*const{s})
-IMPORT=({s}*import{s})
-STRING_LIT=({s}*\"[a-zA-Z]+[0-9a-zA-Z]*\"{s}*)
-INT_LIT=({s}*[0-9]+{s}*)
-VAR=({s}*var{s}*)
-FUNC=({s}*func{s})
-OPEN_PARAN=({s}*\({s}*)
-CLOSE_PARAN=({s}*\){s}*)
-OPEN_CURLY=({s}*\{{s}*)
-CLOSE_CURLY=({s}*\}{s}*)
-IDENTIFIER=({s}*[a-zA-Z]+[0-9a-zA-Z]*{s}*)
-SLASH=({s}*\/{s}*)
+CONST=({a}*const{a}+)
+IMPORT=({a}*import{a}+)
+STRING_LIT=({a}*\"(.)*\"{a}*)
+INT_LIT=({a}*[0-9]+{a}*)
+VAR=({a}*var{a}+)
+FUNC=({a}*func{a}+)
+OPEN_PARAN=({a}*\({a}*)
+CLOSE_PARAN=({a}*\){a}*)
+OPEN_CURLY=({a}*\{{a}*)
+CLOSE_CURLY=({a}*\}{a}*)
+IDENTIFIER=({a}*[a-zA-Z]+[0-9a-zA-Z]*{a}*)
+SLASH=({a}*\/{a}*)
 
 
 
 %% 
-<YYINITIAL> {PACKAGE} { yybegin(IDENSTATE); return (new Token(Token.PACKAGE,yytext().replace(" ","")));}
-<YYINITIAL> {IMPORT} { yybegin(IDENSTATE); return (new Token(Token.IMPORT,yytext().replace(" ","")));}
-<YYINITIAL> {CONST} { yybegin(CONSTSTATE); return (new Token(Token.CONST,yytext().replace(" ","")));}
+<YYINITIAL> {PACKAGE} { yybegin(IDENSTATE); return (new Token(Token.PACKAGE,yytext().replace(" ","").replace("\t","")));}
+<YYINITIAL> {IMPORT} { yybegin(IDENSTATE); return (new Token(Token.IMPORT,yytext().replace(" ","").replace("\t","")));}
+<YYINITIAL> {CONST} { yybegin(CONSTSTATE); return (new Token(Token.CONST,yytext().replace(" ","").replace("\t","")));}
 <YYINITIAL> {FUNC} {return (new Token(Token.FUNC,yytext().replace(" ","")));}
-<YYINITIAL> {OPEN_PARAN} {paranCount++;return (new Token(Token.OPEN_PARAN,yytext().replace(" ","")));}
-<YYINITIAL> {CLOSE_PARAN} {paranCount--;if(paranCount < 0){return new Token(Token.ERROR,"Something wrong with brackets");}return (new Token(Token.CLOSE_PARAN,yytext().replace(" ","")));}
-<YYINITIAL> {CLOSE_CURLY} {curlyCount--;if(curlyCount < 0){return new Token(Token.ERROR,"Something wrong with brackets");}return (new Token(Token.CLOSE_CURLY,yytext().replace(" ","")));}
-<YYINITIAL> {OPEN_CURLY} {curlyCount++;return (new Token(Token.OPEN_CURLY,yytext().replace(" ","")));}
-<YYINITIAL> {IDENTIFIER} {return (new Token(Token.IDENTIFIER,yytext().replace(" ","")));}
-<YYINITIAL> {DOT} {return (new Token(Token.DOT,yytext().replace(" ","")));}
-<YYINITIAL> {VAR} {return (new Token(Token.VAR,yytext().replace(" ","")));}
-<YYINITIAL> {EQUAL} {return (new Token(Token.EQUAL,yytext().replace(" ","")));}
-<YYINITIAL> {INT_LIT} {return (new Token(Token.INT_LIT,yytext().replace(" ","")));}
-<YYINITIAL> {STRING_LIT} {return (new Token(Token.STRING_LIT,yytext().replace(" ","")));}
-<YYINITIAL> {SLASH} {return (new Token(Token.SLASH,yytext().replace(" ","")));}
+<YYINITIAL> {OPEN_PARAN} {paranCount++;return (new Token(Token.OPEN_PARAN,yytext().replace(" ","").replace("\t","")));}
+<YYINITIAL> {CLOSE_PARAN} {paranCount--;if(paranCount < 0){return new Token(Token.ERROR,"Something wrong with brackets");}return (new Token(Token.CLOSE_PARAN,yytext().replace(" ","").replace("\t","")));}
+<YYINITIAL> {CLOSE_CURLY} {curlyCount--;if(curlyCount < 0){return new Token(Token.ERROR,"Something wrong with brackets");}return (new Token(Token.CLOSE_CURLY,yytext().replace(" ","").replace("\t","")));}
+<YYINITIAL> {OPEN_CURLY} {curlyCount++;return (new Token(Token.OPEN_CURLY,yytext().replace(" ","").replace("\t","")));}
+<YYINITIAL> {IDENTIFIER} {return (new Token(Token.IDENTIFIER,yytext().replace(" ","").replace("\t","")));}
+<YYINITIAL> {DOT} {return (new Token(Token.DOT,yytext().replace(" ","").replace("\t","")));}
+<YYINITIAL> {VAR} {return (new Token(Token.VAR,yytext().replace(" ","").replace("\t","")));}
+<YYINITIAL> {EQUAL} {return (new Token(Token.EQUAL,yytext().replace(" ","").replace("\t","")));}
+<YYINITIAL> {INT_LIT} {return (new Token(Token.INT_LIT,yytext().replace(" ","").replace("\t","")));}
+<YYINITIAL> {STRING_LIT} {return (new Token(Token.STRING_LIT,yytext()));}
+<YYINITIAL> {SLASH} {return (new Token(Token.SLASH,yytext().replace(" ","").replace("\t","")));}
 
 
-<CONSTSTATE> {IDENTIFIER} {yybegin(CONSTSTATE2); return (new Token(Token.IDENTIFIER,yytext().replace(" ","")));}
-<CONSTSTATE2> {IDENTIFIER} {return (new Token(Token.IDENTIFIER,yytext().replace(" ","")));}
-<CONSTSTATE2> {EQUAL} {yybegin(CONSTSTATE3);return (new Token(Token.EQUAL,yytext().replace(" ","")));}
-<CONSTSTATE3> {STRING_LIT} {yybegin(YYINITIAL);return (new Token(Token.STRING_LIT,yytext().replace(" ","")));}
-<CONSTSTATE3> {INT_LIT} {yybegin(YYINITIAL);return (new Token(Token.INT_LIT,yytext().replace(" ","")));}
+<CONSTSTATE> {IDENTIFIER} {yybegin(CONSTSTATE2); return (new Token(Token.IDENTIFIER,yytext().replace(" ","").replace("\t","")));}
+<CONSTSTATE2> {IDENTIFIER} {return (new Token(Token.IDENTIFIER,yytext().replace(" ","").replace("\t","")));}
+<CONSTSTATE2> {EQUAL} {yybegin(CONSTSTATE3);return (new Token(Token.EQUAL,yytext().replace(" ","").replace("\t","")));}
+<CONSTSTATE3> {STRING_LIT} {yybegin(YYINITIAL);return (new Token(Token.STRING_LIT,yytext().replace(" ","").replace("\t","")));}
+<CONSTSTATE3> {INT_LIT} {yybegin(YYINITIAL);return (new Token(Token.INT_LIT,yytext().replace(" ","").replace("\t","")));}
 
-<IDENSTATE> {IDENTIFIER} { yybegin(YYINITIAL);return (new Token(Token.IDENTIFIER,yytext().replace(" ","")));}
-<IDENSTATE> {STRING_LIT} { yybegin(YYINITIAL); return (new Token(Token.STRING_LIT,yytext().replace(" ","")));}
+<IDENSTATE> {IDENTIFIER} { yybegin(YYINITIAL);return (new Token(Token.IDENTIFIER,yytext().replace(" ","").replace("\t","")));}
+<IDENSTATE> {STRING_LIT} { yybegin(YYINITIAL); return (new Token(Token.STRING_LIT,yytext().replace(" ","").replace("\t","")));}
 
 
 
