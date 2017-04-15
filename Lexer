@@ -1,6 +1,6 @@
 import java.lang.System;
 import java.io.*;
-
+import java.util.Stack;
 class Lexer {
 
 	Yylex tokenizer;
@@ -41,80 +41,139 @@ class Lexer {
 %state IDENSTATE, CONSTSTATE, CONSTSTATE2, CONSTSTATE3, FUNCSTATE, FUNCSTATE2
 
 %{
+
+	public static String cleanString(String string){
+		return string.replace("\t","").replace(" ","").replace("\n","").replace("\r","");
+	}
 	//initialize  variables to be used by class
+	Stack<String> stack = new Stack<String>();
 	int paranCount = 0;
 	int curlyCount = 0;
-
+	int squareCount = 0;
 %}
 
 
 %init{
 
+
 //Add code to be executed on initialization of the lexer
 
 %init}
-%eof{ 
-if(curlyCount != 0 || paranCount != 0){
-	System.out.println("Something wrong with brackets");
+%eof{
+if(!stack.isEmpty()){
+	while(!stack.isEmpty()){
+		if(stack.pop().equals("(")){
+			System.out.println("EOF: There is some ( that is not closed");
+		}else{
+			if(stack.pop().equals("{")){
+				System.out.println("EOF: There is some { that is not closed");
+			}else{
+				if(stack.pop().equals("[")){
+					System.out.println("EOF: There is some [ that is not closed");
+				}
+			}
+		}
+	}
+}else{
+	System.out.println("EOF: Done");
 }
-%eof} 
+%eof}
 
-PACKAGE=({a}*package{a}+)
+PACKAGE=(package{a}+)
 s=(" ")
 n=(\n)
 t=(\t)
 r=(\r)
-a=([ /&nbsp;\t])
+a=([ \t\b\f\r\n])
 EQUAL=({a}*"="{a}*)
 DOT=(\.)
-CONST=({a}*const{a}+)
-IMPORT=({a}*import{a}+)
-STRING_LIT=({a}*\"(.)*\"{a}*)
+CONST=(const{a}+)
+IMPORT=(import{a}+)
+STRING_LIT=({a}*\"(\\.|[^\"\n\r])*\"{a}*|{a}*\'(\\.|[^\'\n\r])*\'{a}*|{a}*\`(\\.|[^\`\n\r])*\`{a}*)
+AND_OP=({a}*/&&{a}*)
 INT_LIT=({a}*[0-9]+{a}*)
-VAR=({a}*var{a}+)
+VAR=({a}*var{a}*)
 FUNC=({a}*func{a}+)
 OPEN_PARAN=({a}*\({a}*)
 CLOSE_PARAN=({a}*\){a}*)
 OPEN_CURLY=({a}*\{{a}*)
 CLOSE_CURLY=({a}*\}{a}*)
-IDENTIFIER=({a}*[a-zA-Z]+[0-9a-zA-Z]*{a}*)
+OPEN_SQUARE=({a}*\[{a}*)
+CLOSE_SQUARE=({a}*\]{a}*)
 SLASH=({a}*\/{a}*)
+COMMA=({a}*\,{a}*)
+PERCENT=({a}*\%{a}*)
+REL_OP=({a}*\=={a}*|{a}*<{a}*|{a}*>{a}*|{a}*>={a}*|{a}*<={a}*)
+SEMI_COLON=({a}*\;{a}*)
+COLON=({a}*\:{a}*)
+COLON_EQUAL=({a}*\:={a}*)
+FOR=({a}*for{a}*)
+IF=({a}*if{a}*)
+ELSE=({a}*else{a}*)
+AND_OP=({a}*&&{a}*)
+PLUS=({a}*\+{a}*)
+INCREMENT=({a}*\+\+{a}*)
+RETURN=({a}*return{a}*)
+ASTRISK=({a}*\*{a}*)
+MINUS=({a}*-{a}*)
+SWITCH=({a}*switch{a}*)
+CASE=({a}*case{a}*)
+DEFAULT=({a}*default{a}*)
+IDENTIFIER=({a}*[a-zA-Z]+[0-9a-zA-Z]*{a}*)
 
 
 
-%% 
-<YYINITIAL> {PACKAGE} { yybegin(IDENSTATE); return (new Token(Token.PACKAGE,yytext().replace(" ","").replace("\t","")));}
-<YYINITIAL> {IMPORT} { yybegin(IDENSTATE); return (new Token(Token.IMPORT,yytext().replace(" ","").replace("\t","")));}
-<YYINITIAL> {CONST} { yybegin(CONSTSTATE); return (new Token(Token.CONST,yytext().replace(" ","").replace("\t","")));}
-<YYINITIAL> {FUNC} {return (new Token(Token.FUNC,yytext().replace(" ","")));}
-<YYINITIAL> {OPEN_PARAN} {paranCount++;return (new Token(Token.OPEN_PARAN,yytext().replace(" ","").replace("\t","")));}
-<YYINITIAL> {CLOSE_PARAN} {paranCount--;if(paranCount < 0){return new Token(Token.ERROR,"Something wrong with brackets");}return (new Token(Token.CLOSE_PARAN,yytext().replace(" ","").replace("\t","")));}
-<YYINITIAL> {CLOSE_CURLY} {curlyCount--;if(curlyCount < 0){return new Token(Token.ERROR,"Something wrong with brackets");}return (new Token(Token.CLOSE_CURLY,yytext().replace(" ","").replace("\t","")));}
-<YYINITIAL> {OPEN_CURLY} {curlyCount++;return (new Token(Token.OPEN_CURLY,yytext().replace(" ","").replace("\t","")));}
-<YYINITIAL> {IDENTIFIER} {return (new Token(Token.IDENTIFIER,yytext().replace(" ","").replace("\t","")));}
-<YYINITIAL> {DOT} {return (new Token(Token.DOT,yytext().replace(" ","").replace("\t","")));}
-<YYINITIAL> {VAR} {return (new Token(Token.VAR,yytext().replace(" ","").replace("\t","")));}
-<YYINITIAL> {EQUAL} {return (new Token(Token.EQUAL,yytext().replace(" ","").replace("\t","")));}
-<YYINITIAL> {INT_LIT} {return (new Token(Token.INT_LIT,yytext().replace(" ","").replace("\t","")));}
-<YYINITIAL> {STRING_LIT} {return (new Token(Token.STRING_LIT,yytext()));}
-<YYINITIAL> {SLASH} {return (new Token(Token.SLASH,yytext().replace(" ","").replace("\t","")));}
+%%
+<YYINITIAL> ({a}*\/\/[^\n]*) {}
 
+<YYINITIAL> {PACKAGE} {return (new Token(Token.PACKAGE,cleanString(yytext())));}
+<YYINITIAL> {IMPORT} {return (new Token(Token.IMPORT,cleanString(yytext())));}
+<YYINITIAL> {CONST} {return (new Token(Token.CONST,cleanString(yytext())));}
+<YYINITIAL> {FUNC} {return (new Token(Token.FUNC,cleanString(yytext())));}
+<YYINITIAL> {OPEN_PARAN} {stack.push("(");return (new Token(Token.OPEN_PARAN,cleanString(yytext())));}
+<YYINITIAL> {OPEN_CURLY} {stack.push("{");return (new Token(Token.OPEN_CURLY,cleanString(yytext())));}
+<YYINITIAL> {OPEN_SQUARE} {stack.push("[");return (new Token(Token.OPEN_SQUARE,cleanString(yytext())));}
 
-<CONSTSTATE> {IDENTIFIER} {yybegin(CONSTSTATE2); return (new Token(Token.IDENTIFIER,yytext().replace(" ","").replace("\t","")));}
-<CONSTSTATE2> {IDENTIFIER} {return (new Token(Token.IDENTIFIER,yytext().replace(" ","").replace("\t","")));}
-<CONSTSTATE2> {EQUAL} {yybegin(CONSTSTATE3);return (new Token(Token.EQUAL,yytext().replace(" ","").replace("\t","")));}
-<CONSTSTATE3> {STRING_LIT} {yybegin(YYINITIAL);return (new Token(Token.STRING_LIT,yytext().replace(" ","").replace("\t","")));}
-<CONSTSTATE3> {INT_LIT} {yybegin(YYINITIAL);return (new Token(Token.INT_LIT,yytext().replace(" ","").replace("\t","")));}
-
-<IDENSTATE> {IDENTIFIER} { yybegin(YYINITIAL);return (new Token(Token.IDENTIFIER,yytext().replace(" ","").replace("\t","")));}
-<IDENSTATE> {STRING_LIT} { yybegin(YYINITIAL); return (new Token(Token.STRING_LIT,yytext().replace(" ","").replace("\t","")));}
+<YYINITIAL> {CLOSE_PARAN} {if(!stack.lastElement().equals("(")){return new Token(Token.ERROR,") has no matching ( in line " +(yyline+1));}
+stack.pop();return (new Token(Token.CLOSE_PARAN,cleanString(yytext())));}
+<YYINITIAL> {CLOSE_CURLY} {if(!stack.lastElement().equals("{")){return new Token(Token.ERROR,"} has no matching { in line " +(yyline+1));}
+stack.pop();return (new Token(Token.CLOSE_CURLY,cleanString(yytext())));}
+<YYINITIAL> {CLOSE_SQUARE} {if(!stack.lastElement().equals("[")){return new Token(Token.ERROR,"] has no matching [ in line " +(yyline+1));}
+stack.pop();return (new Token(Token.CLOSE_SQUARE,cleanString(yytext())));}
 
 
 
-<YYINITIAL> . {return new Token(Token.ERROR, "Invalid input: " + yytext());}
+<YYINITIAL> {DOT} {return (new Token(Token.DOT,cleanString(yytext())));}
+<YYINITIAL> {VAR} {return (new Token(Token.VAR,cleanString(yytext())));}
+<YYINITIAL> {EQUAL} {return (new Token(Token.EQUAL,cleanString(yytext())));}
+<YYINITIAL> {INT_LIT} {return (new Token(Token.INT_LIT,cleanString(yytext())));}
+<YYINITIAL> {STRING_LIT} {return (new Token(Token.STRING_LIT,yytext().replace("\n","").replace("\r","")));}
+<YYINITIAL> {SLASH} {return (new Token(Token.SLASH,cleanString(yytext())));}
+<YYINITIAL> {COMMA} {return (new Token(Token.COMMA,cleanString(yytext())));}
+<YYINITIAL> {PERCENT} {return (new Token(Token.PERCENT,cleanString(yytext())));}
+<YYINITIAL> {REL_OP} {return (new Token(Token.REL_OP,cleanString(yytext())));}
+<YYINITIAL> {AND_OP} {return (new Token(Token.AND_OP,cleanString(yytext())));}
+<YYINITIAL> {SEMI_COLON} {return (new Token(Token.SEMI_COLON,cleanString(yytext())));}
+<YYINITIAL> {COLON} {return (new Token(Token.COLON,cleanString(yytext())));}
+<YYINITIAL> {COLON_EQUAL} {return (new Token(Token.COLON_EQUAL,cleanString(yytext())));}
+<YYINITIAL> {FOR} {return (new Token(Token.FOR,cleanString(yytext())));}
+<YYINITIAL> {IF} {return (new Token(Token.IF,cleanString(yytext())));}
+<YYINITIAL> {ELSE} {return (new Token(Token.ELSE,cleanString(yytext())));}
+<YYINITIAL> {AND_OP} {return (new Token(Token.AND_OP,cleanString(yytext())));}
+<YYINITIAL> {PLUS} {return (new Token(Token.PLUS,cleanString(yytext())));}
+<YYINITIAL> {INCREMENT} {return (new Token(Token.INCREMENT,cleanString(yytext())));}
+<YYINITIAL> {RETURN} {return (new Token(Token.RETURN,cleanString(yytext())));}
+<YYINITIAL> {ASTRISK} {return (new Token(Token.ASTRISK,cleanString(yytext())));}
+<YYINITIAL> {MINUS} {return (new Token(Token.MINUS,cleanString(yytext())));}
+<YYINITIAL> {SWITCH} {return (new Token(Token.SWITCH,cleanString(yytext())));}
+<YYINITIAL> {CASE} {return (new Token(Token.CASE,cleanString(yytext())));}
+<YYINITIAL> {DEFAULT} {return (new Token(Token.DEFAULT,cleanString(yytext())));}
+
+
+<YYINITIAL> {IDENTIFIER} {return (new Token(Token.IDENTIFIER,cleanString(yytext())));}
+
+
 <YYINITIAL> [\n] {}
 <YYINITIAL> [\t] {}
 <YYINITIAL> [\r] {}
-
-
-
+<YYINITIAL> . {return new Token(Token.ERROR, "Invalid input: " + yytext() +" in line "+(yyline+1));}
