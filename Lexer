@@ -134,12 +134,39 @@ IDENTIFIER=({a}*[a-zA-Z]+[0-9a-zA-Z]*{a}*)
 <YYINITIAL> {OPEN_CURLY} {stack.push("{");return (new Token(Token.OPEN_CURLY,cleanString(yytext())));}
 <YYINITIAL> {OPEN_SQUARE} {stack.push("[");return (new Token(Token.OPEN_SQUARE,cleanString(yytext())));}
 
-<YYINITIAL> {CLOSE_PARAN} {if(!stack.lastElement().equals("(")){return new Token(Token.ERROR,") has no matching ( in line " +(yyline+1));}
-stack.pop();return (new Token(Token.CLOSE_PARAN,cleanString(yytext())));}
-<YYINITIAL> {CLOSE_CURLY} {if(!stack.lastElement().equals("{")){return new Token(Token.ERROR,"} has no matching { in line " +(yyline+1));}
-stack.pop();return (new Token(Token.CLOSE_CURLY,cleanString(yytext())));}
-<YYINITIAL> {CLOSE_SQUARE} {if(!stack.lastElement().equals("[")){return new Token(Token.ERROR,"] has no matching [ in line " +(yyline+1));}
-stack.pop();return (new Token(Token.CLOSE_SQUARE,cleanString(yytext())));}
+<YYINITIAL> {CLOSE_PARAN} {
+	if(!stack.contains("(")){
+		return new Token(Token.ERROR,") has no matching ( in line " +(yyline+1));
+	}else{
+		if(!stack.lastElement().equals("(")){
+			return new Token(Token.ERROR,"You have a missing bracket in line " +(yyline+1));
+		}else{
+			stack.pop();return (new Token(Token.CLOSE_PARAN,cleanString(yytext())));
+		}
+	}
+}
+<YYINITIAL> {CLOSE_CURLY} {
+	if(!stack.contains("{")){
+		return new Token(Token.ERROR,"} has no matching { in line " +(yyline+1));
+	}else{
+		if(!stack.lastElement().equals("{")){
+			return new Token(Token.ERROR,"You have a missing bracket in line " +(yyline+1));
+		}else{
+			stack.pop();return (new Token(Token.CLOSE_CURLY,cleanString(yytext())));
+		}
+	}
+}
+<YYINITIAL> {CLOSE_SQUARE} {
+	if(!stack.contains("[")){
+		return new Token(Token.ERROR,"] has no matching [ in line " +(yyline+1));
+	}else{
+		if(!stack.lastElement().equals("[")){
+			return new Token(Token.ERROR,"You have a missing bracket in line " +(yyline+1));
+		}else{
+			stack.pop();return (new Token(Token.CLOSE_SQUARE,cleanString(yytext())));
+		}
+	}
+}
 
 
 
